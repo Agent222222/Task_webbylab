@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addMovie, fetchMovieData, fetchMovies, updateMovie } from '../global_states/moviesSlice'
 
-export default function ProductFormDialog({ initialItem = null, onSuccess, onCancel }) {
+export default function MovieForm({ initialItem = null, onSuccess, onCancel }) { // component to add or edit movies
     const dispatch = useDispatch()
     const token = useSelector(state => state.user.token);
     const { movies } = useSelector(state => state.movies);
@@ -14,7 +14,7 @@ export default function ProductFormDialog({ initialItem = null, onSuccess, onCan
     })
     const [formError, setFormError] = useState("");
 
-    useEffect(() => {
+    useEffect(() => { // thi effect filles all the fields of the form in case movie is passed as a prop initialItem
         if (initialItem?.id && token) {
             dispatch(fetchMovieData({ token, id: initialItem.id }));
         } else if (initialItem) {
@@ -27,7 +27,7 @@ export default function ProductFormDialog({ initialItem = null, onSuccess, onCan
         }
     }, [initialItem, dispatch, token]);
 
-    useEffect(() => {
+    useEffect(() => { // this effect updates the form fields in case we quickly go to the form one more time
         if (!initialItem?.id || !movies?.data) return;
 
         const updatedMovie = movies.data.find(m => m.id === initialItem.id);
@@ -41,12 +41,12 @@ export default function ProductFormDialog({ initialItem = null, onSuccess, onCan
         }
     }, [movies, initialItem]);
 
-    const handleChange = (e) => {
+    const handleChange = (e) => { // for the form state elements to be changed 
         const { name, value } = e.target
         setForm(f => ({ ...f, [name]: name === 'year' ? Number(value) : value }))
     }
 
-    const handleActorChange = (index, value) => {
+    const handleActorChange = (index, value) => {// for the form actor elements to be changed 
         const updatedActors = [...form.actors]
         updatedActors[index] = value
         setForm(f => ({ ...f, actors: updatedActors }))
@@ -63,7 +63,7 @@ export default function ProductFormDialog({ initialItem = null, onSuccess, onCan
         }))
     }
 
-    async function handleSubmit(e){
+    async function handleSubmit(e){ // submitting the form and making a redux function call for the fetch
         e.preventDefault()
         if(!form.title || !form.year || !form.format || !form.actors){
             setFormError("Please fill all the fields")
@@ -83,7 +83,7 @@ export default function ProductFormDialog({ initialItem = null, onSuccess, onCan
             }
             
             dispatch(fetchMovies(token)) 
-            onSuccess?.()
+            onSuccess?.() // in case it is successful operation the callback function will be called from MovieList and form will be closed
         } catch (err) {
             console.error('Failed to save movie:', err)
             setFormError(err);

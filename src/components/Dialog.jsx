@@ -2,7 +2,7 @@ export default function ConfirmationDialog({
     message = "Are you sure?", 
     onConfirm, 
     onCancel 
-}) {
+}) {             // this component is used only to confirm the deletion of a movie
     return (
         <div 
             className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"

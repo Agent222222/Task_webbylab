@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, register } from '../global_states/authSlice'; 
+import { setData } from '../global_states/authSlice';
 import { useNavigate } from 'react-router-dom';
 
 export default function AuthForm() {
     const navigate = useNavigate();
-    const { status, isLoading, error } = useSelector((state) => state.user);
+    const { token, status, isLoading, error } = useSelector((state) => state.user);
     const dispatch = useDispatch();
     const [isRegister, setIsRegister] = useState(false);
     const [form, setForm] = useState({
@@ -15,13 +16,26 @@ export default function AuthForm() {
         confirmPassword: '',
     });
 
-    useEffect(function(){
-        if(status === 1){
+    useEffect(() => { // this effect task is to check the storage and get the user credentials if he/she was authenticated before and not used logout
+        const storedUser = JSON.parse(localStorage.getItem("user"))
+        if (storedUser?.token && storedUser?.status === 1){
+            dispatch(setData(storedUser)); 
             navigate("/movies");
         }
-    }, [status, navigate]);
+    }, [dispatch, navigate])
 
-    function changeAuthType(e){
+
+    useEffect(function(){ // this effect stores the user in the localStorage "user" and moves us to /movies
+        if(status === 1 && token){
+            localStorage.setItem("user", JSON.stringify({
+                token,
+                status,
+            }))
+            navigate("/movies");
+        }
+    }, [status, navigate, token]);
+
+    function changeAuthType(e){ // just to change /register to /login and vice versa
         e.preventDefault();
         
         if(!isRegister){ // here we have to use !isRegister with "!" as in this function state is still the previous type
@@ -32,12 +46,12 @@ export default function AuthForm() {
         setIsRegister(!isRegister);
     }
 
-    function handleChange(e){
+    function handleChange(e){ // for the form state elements to be changed like email or password
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    function handleSubmit(e){
+    function handleSubmit(e){ // function to call register or login of Auth and pass the relevant data
         e.preventDefault();
 
         const data = isRegister

@@ -10,7 +10,7 @@ export default function MovieItem({ details, onEdit }) {
     const dispatch = useDispatch();
     const [isOpen, setIsOpen] = useState(false)
 
-    const handleCardClick = (e) => {
+    const handleCardClick = (e) => { // function to open particular movie details page
         if (e.target.closest(".action-btn")) return;
         navigate(`/movies/${details.id}`);
     };
@@ -29,10 +29,10 @@ export default function MovieItem({ details, onEdit }) {
             
 
             <button
-                onClick={(e) => {
+                onClick={(e) => { // here used prevent and stop not to trigger move to movie/:id page
                     e.preventDefault();
                     e.stopPropagation();
-                    onEdit(details)}
+                    onEdit(details)} // to open movieform with filled in fields
                 }
                 className="w-10 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition flex items center justify-center"
             >
@@ -52,7 +52,7 @@ export default function MovieItem({ details, onEdit }) {
                 </svg>
             </button>
             <button
-                onClick={(e)=> {
+                onClick={(e)=> { // here used prevent and stop not to trigger move to movie/:id page
                     e.preventDefault();
                     e.stopPropagation();
                     setIsOpen(true)}

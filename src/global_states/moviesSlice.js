@@ -1,22 +1,36 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { data } from "react-router-dom";
 
 const initialState = {
-    movies: [],
+    movies: {       
+        data: [],      // holds the array
+        meta: null,   
+        status: null   
+    },
     isLoading: false,
     error: "",
 };
 
 //as we are using thunk here, we should be using the createAsyncThunk for the fetch
 
+
 export const fetchMovies = createAsyncThunk(
     "movies/fetchMovies",
-    async (token, { rejectWithValue }) => {
+    async ({token, title, actor}, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/movies?sort=year&order=DESC&limit=10&offset=0`, {
+            const params = new URLSearchParams({
+                sort: "year",
+                order: "DESC",
+                limit: "10",
+                offset: "0",
+            });
+
+            if (title) params.append("title", title);
+            if (actor) params.append("actor", actor);
+
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/movies?${params.toString()}`, {
                 method: "GET",
                 headers: {
-                    Authorization: `${token}`,
+                    Authorization: token,
                     "Content-Type": "application/json",
                 },
             });
@@ -36,7 +50,7 @@ export const addMovie = createAsyncThunk(
             const response = await fetch(`${process.env.REACT_APP_API_URL}/movies`, {
                 method: "POST",
                 headers: { 
-                    Authorization: `${token}`,
+                    Authorization: token,
                     "Content-Type": "application/json" 
                 },
                 body: JSON.stringify(MovieData),
@@ -56,7 +70,7 @@ export const updateMovie = createAsyncThunk(
             const response = await fetch(`${process.env.REACT_APP_API_URL}/movies/${id}`, {
                 method: "PATCH",
                 headers: { 
-                    Authorization: `${token}`,
+                    Authorization: token,
                     "Content-Type": "application/json" 
                 },
                 body: JSON.stringify(data),
@@ -76,7 +90,7 @@ export const deleteMovie = createAsyncThunk(
             const response = await fetch(`${process.env.REACT_APP_API_URL}/movies/${id}`, {
                 method: "DELETE",
                 headers: { 
-                    Authorization: `${token}`,
+                    Authorization: token,
                     "Content-Type": "application/json" 
                 },
             });
@@ -89,6 +103,7 @@ export const deleteMovie = createAsyncThunk(
     }
 );
 
+//this function is used to get details of the particular movie when we go to the url "movies/:id"
 export const fetchMovieData = createAsyncThunk(
     "movies/fetchMovieData",
     async ({token, id}, { rejectWithValue }) => {
@@ -97,7 +112,7 @@ export const fetchMovieData = createAsyncThunk(
             const response = await fetch(`${process.env.REACT_APP_API_URL}/movies/${id}`, {
                 method: "GET",
                 headers: {
-                    Authorization: `${token}`,
+                    Authorization: token,
                     "Content-Type": "application/json",
                 },
             });
@@ -113,7 +128,7 @@ export const fetchMovieData = createAsyncThunk(
 const MoviesSlice = createSlice({
     name: "movies",
     initialState,
-    extraReducers: (builder) => {
+    extraReducers: (builder) => { // for all above functions handling into the state
         builder
             .addCase(fetchMovies.pending, (state) => {
                 state.isLoading = true;
@@ -121,7 +136,9 @@ const MoviesSlice = createSlice({
             })
             .addCase(fetchMovies.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.movies = action.payload;
+                state.movies.data = action.payload.data;
+                state.movies.meta = action.payload.meta;
+                state.movies.status = action.payload.status;
             })
             .addCase(fetchMovies.rejected, (state, action) => {
                 state.isLoading = false;

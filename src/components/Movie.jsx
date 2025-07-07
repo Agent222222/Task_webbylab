@@ -5,7 +5,7 @@ import { fetchMovieData } from "../global_states/moviesSlice";
 import Spinner from "./Spinner";
 import Error from "./Error";
 
-export default function Movie() {
+export default function Movie() {  // component to display all the particular movie data that is fetched from API by the ID
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -13,20 +13,20 @@ export default function Movie() {
     const { movies, isLoading, error } = useSelector(state => state.movies);
     const [details, setDetails] = useState(null);
 
-    useEffect(() => {
+    useEffect(() => {// to fetch the data of the movie on mount
         if (id && token) {
             dispatch(fetchMovieData({ token, id }));
         }
     }, [dispatch, id, token]);
 
-    useEffect(() => {
+    useEffect(() => {// to set details of the movie to state details after movie data was fetched
         if (movies && id) {
             const movie = movies.data.find( movie => movie.id === Number(id));
             setDetails(movie || null);
         }
     }, [movies, id]);
 
-    function formatDateTime(dateString) {
+    function formatDateTime(dateString) { // date time formatter
         if (!dateString) return "N/A";
         const options = {
             year: "numeric",

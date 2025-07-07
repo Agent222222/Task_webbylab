@@ -17,6 +17,7 @@ import Spinner from "./components/Spinner.jsx";
 // npm i react-redux
 // npm i redux-thunk
 // npm i @reduxjs/toolkit
+// npm i axios
 
 const router = createBrowserRouter([
   {path: "/", element: <Navigate replace to='/login'/>, errorElement: <Error/>},

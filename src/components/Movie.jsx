@@ -41,7 +41,7 @@ export default function Movie() {  // component to display all the particular mo
 
 
     if (isLoading) return <Spinner />;
-    if (error) return <Error message={error} />;
+    if (error) return <Error error={error} />;
     if (!details) return <div>No movie found.</div>;
 
     return (
@@ -61,8 +61,6 @@ export default function Movie() {  // component to display all the particular mo
             <div className="text-gray-700 mb-4 space-y-1">
                 <p className="text-blue-500 w-full flex items-center justify-between"><strong className="text-gray-700">Year:</strong> {details.year}</p>
                 <p className="text-yellow-500 w-full flex items-center justify-between"><strong className="text-gray-700">Format:</strong> {details.format}</p>
-                <p className="text-green-500 w-full flex items-center justify-between"><strong className="text-gray-700">Created At:</strong> {formatDateTime(details.createdAt)}</p>
-                <p className="text-orange-500 w-full flex items-center justify-between"><strong className="text-gray-700">Last Updated:</strong> {formatDateTime(details.updatedAt)}</p>
             </div>
 
             <h2 className="text-2xl font-semibold mt-6 mb-3 text-black">Actors</h2>
@@ -71,12 +69,6 @@ export default function Movie() {  // component to display all the particular mo
                     details.actors.map(actor => (
                         <li key={actor.id} className="border p-3 rounded-md bg-gray-50 hover:bg-gray-100 transition list-none">
                             <p className="font-medium text-gray-800">{actor.name}</p>
-                            <p className="text-gray-600 text-sm pl-3">
-                                Created At: {formatDateTime(actor.createdAt)}
-                            </p>
-                            <p className="text-gray-600 text-sm pl-3">
-                                Last Updated: {formatDateTime(actor.updatedAt)}
-                            </p>
                         </li>
                     ))
                 ) : (

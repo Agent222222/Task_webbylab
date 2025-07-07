@@ -4,11 +4,12 @@ import { useState } from "react";
 import ConfirmationDialog from "./Dialog.jsx";
 import { deleteMovie } from "../global_states/moviesSlice.js";
 
-export default function MovieItem({ details, onEdit }) {
+export default function MovieItem({ details, onEdit, onSuccess }) {
     const token = useSelector(state => state.user.token);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isOpen, setIsOpen] = useState(false)
+    const { error } = useSelector((state) => state.movies);
 
     const handleCardClick = (e) => { // function to open particular movie details page
         if (e.target.closest(".action-btn")) return;
@@ -76,7 +77,14 @@ export default function MovieItem({ details, onEdit }) {
             </button>
         </div>
         
-        {isOpen && <ConfirmationDialog onConfirm={()=> dispatch(deleteMovie({ token, id: details.id }))} onCancel={()=>setIsOpen(false)}/>}
+        {isOpen && <ConfirmationDialog 
+                        onConfirm={()=> {
+                            dispatch(deleteMovie({ token, id: details.id }))
+                            if(!error){
+                                onSuccess();
+                            }
+                        }}
+                        onCancel={()=>setIsOpen(false)}/>}
         </div>
     );
 }

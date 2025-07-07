@@ -65,14 +65,35 @@ export default function MovieForm({ initialItem = null, onSuccess, onCancel }) {
 
     async function handleSubmit(e){ // submitting the form and making a redux function call for the fetch
         e.preventDefault()
-        if(!form.title || !form.year || !form.format || !form.actors){
-            setFormError("Please fill all the fields")
+        const cleanedTitle = form.title.trim();
+
+        if (!cleanedTitle || !form.year || !form.format ) {
+            setFormError("Please make sure all fields are filled correctly and not just spaces.");
             return;
         }
 
-        const cleanedForm = { // this is used to remove all clean (empty) fields from the form data and for them not to be sent to back
+        const cleanedActors = form.actors // this is used to clean actors from just spaces
+            .map(actor => actor.trim())
+            .filter(actor => actor !== '');
+
+        const actorRegex = /^[a-zA-Zа-яА-ЯёЁіІїЇєЄ\s,.\-]+$/u; // valid characters
+        const containsLetterRegex = /[a-zA-Zа-яА-ЯёЁіІїЇєЄ]/u;  // at least one letter
+
+        for (let actor of cleanedActors) { // check for actors not to be like "..." 
+            if (!actorRegex.test(actor)) {
+                setFormError("Actor names can only contain letters, spaces, commas, hyphens, and periods.");
+                return;
+            }
+            if (!containsLetterRegex.test(actor)) {
+                setFormError("Each actor name must contain at least one letter.");
+                return;
+            }
+        }
+
+        const cleanedForm = {
             ...form,
-            actors: form.actors.filter(a => a.trim() !== '')
+            title: cleanedTitle,
+            actors: cleanedActors,
         };
 
         try {
@@ -118,7 +139,7 @@ export default function MovieForm({ initialItem = null, onSuccess, onCancel }) {
                 </div>
 
                 <div>
-                    <label className="block mb-1">Year</label>
+                    <label className="block mb-1">Year <p className='text-sm text-gray-400'>(please choose between 1850 and 2022)</p></label>
                     <input
                         type="number"
                         name="year"
@@ -126,6 +147,7 @@ export default function MovieForm({ initialItem = null, onSuccess, onCancel }) {
                         onChange={handleChange}
                         className="w-full border rounded px-3 py-2"
                         max={2022}
+                        min={1850}
                         required
                     />
                 </div>

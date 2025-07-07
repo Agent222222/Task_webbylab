@@ -15,13 +15,13 @@ const initialState = {
 
 export const fetchMovies = createAsyncThunk(
     "movies/fetchMovies",
-    async ({token, title, actor}, { rejectWithValue }) => {
+    async ({ token, title, actor, limit = "16", offset = "0" }, { rejectWithValue }) => {
         try {
             const params = new URLSearchParams({
                 sort: "year",
                 order: "DESC",
-                limit: "10",
-                offset: "0",
+                limit,
+                offset,
             });
 
             if (title) params.append("title", title);
@@ -55,8 +55,21 @@ export const addMovie = createAsyncThunk(
                 },
                 body: JSON.stringify(MovieData),
             });
-            if (!response.ok) throw new Error();
-            return await response.json();
+            const data = await response.json();
+
+            if (data?.error?.code === "MOVIE_EXISTS") {
+                return rejectWithValue(`A movie with title "${MovieData.title}" already exists.`);
+            }
+
+            if (!response.ok) {
+                // Handle other types of errors
+                return rejectWithValue({
+                    message: `Failed to add Movie "${MovieData.title}"`,
+                    code: "UNKNOWN_ERROR"
+                });
+            }
+
+            return data;
         } catch {
             return rejectWithValue(`Failed to add Movie ${MovieData.title}`);
         }

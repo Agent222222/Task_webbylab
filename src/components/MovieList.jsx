@@ -8,6 +8,7 @@ import MovieForm from "./MovieForm";
 import { logout } from '../global_states/authSlice';
 import { fetchMovies } from "../global_states/moviesSlice.js";
 import { useNavigate } from "react-router-dom";
+import SuccessDialog from "./SuccessDialog.jsx";
 
 function MovieList() {
     const dispatch = useDispatch();
@@ -21,12 +22,36 @@ function MovieList() {
     const [isFormOpened, setIsFormOpened] = useState(false);
     const [currentMovie, setCurrentMovie] = useState({});
     const [submittedSearchTerm, setSubmittedSearchTerm] = useState("");
-    
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [moviesPerPage, setMoviesPerPage] = useState(16);
+
+    useEffect(() => {
+        function updateMoviesPerPage() {
+            const width = window.innerWidth;
+            if (width >= 1024) setMoviesPerPage(16);       // lg
+            else if (width >= 768) setMoviesPerPage(12);   // md
+            else if (width >= 640) setMoviesPerPage(8);    // sm
+            else setMoviesPerPage(4);                      // xs
+        }
+
+        updateMoviesPerPage();
+        window.addEventListener("resize", updateMoviesPerPage); // this is used in order to change fetched amount of movies per page according to the screen size
+        return () => window.removeEventListener("resize", updateMoviesPerPage);
+    }, []);
+
     useEffect(() => {
         // don’t fetch if we still have the form open
         if (isFormOpened) return;
 
-        const query = { token };
+        const offset = (currentPage - 1) * moviesPerPage;
+
+        const query = { // to apply amount of movies fetched according to the screen
+            token,
+            limit: moviesPerPage.toString(),
+            offset: offset.toString(),
+        };
 
         // if there’s a search term, add title/actor
         if (submittedSearchTerm.trim()) {
@@ -35,7 +60,7 @@ function MovieList() {
         }
 
         dispatch(fetchMovies(query));
-    }, [ dispatch, token, submittedSearchTerm, searchItem, isFormOpened ]);
+    }, [dispatch, token, submittedSearchTerm, searchItem, isFormOpened, currentPage, moviesPerPage]);
     
     function handleSearchSubmit() {
         setSubmittedSearchTerm(searchTerm.trim());
@@ -47,13 +72,20 @@ function MovieList() {
         navigate("/");
     }
 
-    function handleEdit(movie){ // just to open movieform with filled in all fields
+    function handleEdit(movie){ // just to open movieForm with filled in all fields
         setCurrentMovie(movie);
         setIsFormOpened(true);
     }
 
+    function success(){ // operation to display the operation was successful (opens dialog)
+        setDialogOpen(true);
+    }
+
     const sortedMovies = (movies?.data || []).toSorted(
-        (a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+        (a, b) => a.title.localeCompare(b.title, ['uk', 'en'], {
+            sensitivity: 'base',
+            ignorePunctuation: true,
+        })
     );
     
     return (
@@ -63,7 +95,7 @@ function MovieList() {
                 logout={handleLogout}
             />
             {isLoading && <Spinner/>}
-            {!isLoading && error && <Error/>}
+            {!isLoading && error && <Error error={error}/>}
             {!isLoading && !error &&
                 <div className="flex flex-col">
                     <div className="flex gap-4 mb-6 px-6">
@@ -99,7 +131,7 @@ function MovieList() {
                         auto-rows-fr p-6">                                           {/* this is a list of movies*/}
                         {sortedMovies.length > 0 ? (
                             sortedMovies.map(movie => (
-                                <MovieItem key={movie.id} onEdit={handleEdit} details={movie} />
+                                <MovieItem key={movie.id} onEdit={handleEdit} onSuccess={success} details={movie} />
                             ))
                         ) : (
                             <div className="col-span-full text-center text-gray-500 mt-[100px]">
@@ -107,14 +139,45 @@ function MovieList() {
                             </div>
                         )}
                     </div>
+                    {movies?.meta?.total && (
+                        <div className="flex justify-center items-center gap-4 mt-6">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                            >
+                                Previous
+                            </button>
+                            <span className="text-lg">{currentPage}</span>
+                            <button
+                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                disabled={(currentPage * moviesPerPage) >= movies.meta.total}
+                                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             }
+
             {isFormOpened &&  // form to add or edit movie
                 <MovieForm 
                     initialItem={currentMovie}
                     onCancel={() => setIsFormOpened(false)}
                     onSuccess={() => {
                         setIsFormOpened(false)
+                        if(!error){
+                            success();
+                        }
+                    }}
+                />
+            }
+
+            {dialogOpen &&  
+                <SuccessDialog 
+                    onConfirm={() => {
+                        setDialogOpen(false);
                     }}
                 />
             }

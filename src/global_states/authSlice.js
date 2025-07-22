@@ -11,7 +11,7 @@ const initialState = { // the whole state is only token and status so I decided 
 
 // the create session method
 export const login = createAsyncThunk(
-    "movies/fetchMovies",
+    "auth/login",
     async (data, { rejectWithValue }) => {
         try {
             const res = await fetch(`${process.env.REACT_APP_API_URL}/sessions`, {
